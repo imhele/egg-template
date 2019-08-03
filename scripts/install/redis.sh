@@ -1,5 +1,5 @@
 apt-get update
-apt-get install gcc automake autoconf libtool make
+apt-get install -y gcc automake autoconf libtool make
 cd /etc/
 wget http://download.redis.io/releases/redis-5.0.5.tar.gz
 tar xzf redis-5.0.5.tar.gz
