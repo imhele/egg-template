@@ -5,7 +5,7 @@ services:
   - redis-server
 node_js: '10'
 before_install:
-  - echo "CREATE DATABASE IF NOT EXISTS notification_test;\nUSE mysql;\nUPDATE user SET user='port', authentication_string=PASSWORD('port') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
+  - echo "CREATE DATABASE IF NOT EXISTS appname_test;\nUSE mysql;\nUPDATE user SET user='port', authentication_string=PASSWORD('port') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
 install:
   - npm install
 before_script:
