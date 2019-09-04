@@ -1,4 +1,3 @@
-import { SecretValidator, SecretValidExample } from '@/model/secret';
 import { changeRadix, HashType, makeHash, UUID, validate } from '@/utils';
 import { NotFound } from '@/utils/errorcode';
 import { Service } from 'egg';
@@ -75,33 +74,6 @@ limitation:
     ]);
     return { accountId, secret };
   }
-
-  public async upsertAccount(accountId: string, secret: string) {
-    validate({ accountId, secret }, SecretValidator);
-    const { redis } = this.app;
-    const { Secret } = this.ctx.model;
-    const dbres = await Promise.all([
-      Secret.upsert({ secret, accountId }),
-      redis.set(this.getSecretKey(accountId), secret),
-    ]);
-    return dbres[1];
-  }
-
-  public async destroyAccount(accountId: string) {
-    validate({ ...SecretValidExample, accountId }, SecretValidator);
-    const { redis } = this.app;
-    const { Group, Secret } = this.ctx.model;
-    const dbres = await Promise.all([
-      redis.del(this.getSecretKey(accountId)),
-      Group.destroy({ where: { token: accountId } }),
-      Secret.destroy({ where: { accountId } }),
-    ]);
-    return dbres[0];
-  }
-
-  // we do not manage account here.
-  // public async listAccount(offset: number, limit: number) {
-  // }
 
   // ***********
   // * PRIVATE *
