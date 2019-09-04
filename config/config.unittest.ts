@@ -1,12 +1,12 @@
-import { EggAppConfig, EggAppInfo, PowerPartial } from 'egg';
-import path from 'path';
+import { EggAppConfig, PowerPartial } from 'egg';
+import { ClientOpts as RedisOpts } from 'redis';
 
-export default (appInfo: EggAppInfo) => {
+export default () => {
   const config: PowerPartial<EggAppConfig> = {
     // ref: https://github.com/eggjs/egg-sequelize
     sequelize: {
       dialect: 'mysql', // support: mysql, postgres, mssql
-      database: 'notification',
+      database: 'appname_test',
       host: '127.0.0.1',
       port: 3306,
       username: 'port',
@@ -22,9 +22,9 @@ export default (appInfo: EggAppInfo) => {
         freezeTableName: true,
       },
     },
-    logger: {
-      dir: path.join(appInfo.HOME, 'logs', appInfo.name),
-    },
+    redis: {
+      prefix: 'appname_test:',
+    } as RedisOpts,
   };
   return config;
 };

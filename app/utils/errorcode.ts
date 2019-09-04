@@ -1,3 +1,5 @@
+import joi from 'joi';
+
 export class UnknownError extends Error {
   static defaultMsg = 'unknown error';
   public errcode: ErrCode;
@@ -30,19 +32,24 @@ export class NotFound extends UnknownError {
   }
 }
 
+export class ValidationError extends UnknownError implements joi.ValidationError {
+  static defaultMsg = 'validate failed';
+  isJoi = true;
+  details = [] as joi.ValidationErrorItem[];
+  _object = {};
+
+  constructor(message: string = ValidationError.defaultMsg) {
+    super(message, ErrCode.InvalidParam);
+  }
+
+  annotate = () => this.message;
+}
+
 export class ServerError extends UnknownError {
   static defaultMsg = 'server internal error';
 
   constructor(message: string = ServerError.defaultMsg, errcode: ErrCode = ErrCode.ServerError) {
     super(message, errcode);
-  }
-}
-
-export class ProxyFailed extends ServerError {
-  static defaultMsg = 'proxy request failed';
-
-  constructor(message: string = ProxyFailed.defaultMsg) {
-    super(message, ErrCode.ProxyFailed);
   }
 }
 
@@ -57,7 +64,6 @@ export const enum ErrCode {
   SystemBusy = '-1',
   Unknown = '-2',
   ServerError = '30000',
-  ProxyFailed = '30001',
   DatabaseError = '30002',
   AuthError = '40000',
   AccessDeny = '40001',

@@ -1,4 +1,5 @@
-import { DefineModelAttr } from '@/utils/types';
+import { extendsModel } from '@/utils';
+import { DefineModel } from '@/utils/types';
 import { Application } from 'egg';
 import { Instance, STRING } from 'sequelize';
 import yamlJoi from 'yaml-joi';
@@ -8,24 +9,22 @@ export interface Secret {
   accountId: string;
 }
 
-export const SecretAttr: DefineModelAttr<Secret> = {
-  accountId: {
-    type: STRING(18),
-    allowNull: false,
-    primaryKey: true,
+export const DefineSecret: DefineModel<Secret> = {
+  Attr: {
+    accountId: {
+      type: STRING(18),
+      allowNull: false,
+    },
+    secret: {
+      type: STRING(22),
+      allowNull: false,
+    },
   },
-  secret: {
-    type: STRING(22),
-    allowNull: false,
+  Sample: {
+    accountId: 'abcdefghijklmnopqr',
+    secret: 'abcdefghijklmnopqrstuv',
   },
-};
-
-export const SecretValidExample: Secret = {
-  accountId: 'abcdefghijklmnopqr',
-  secret: 'abcdefghijklmnopqrstuv',
-};
-
-export const SecretValidator = yamlJoi(`
+  Validator: yamlJoi(`
 type: object
 isSchema: true
 limitation:
@@ -35,14 +34,20 @@ limitation:
         isSchema: true
         limitation:
           - length: 18
-          - regex: !!js/regexp /^(?:[0-9a-zA-Z]*)$/
+          - token: []
       secret:
         type: string
         isSchema: true
         limitation:
           - length: 22
-          - regex: !!js/regexp /^(?:[0-9a-zA-Z]*)$/
-`);
+          - token: []
+  `),
+};
 
-export default (app: Application) =>
-  app.model.define<Instance<Secret>, Secret>('Secret', SecretAttr);
+export default (app: Application) => {
+  const SecretModel = app.model.define<Instance<Secret>, Secret>('Secret', DefineSecret.Attr, {
+    indexes: [{ name: 'PrimaryKey', unique: true, fields: ['accountId'] }],
+  });
+  SecretModel.removeAttribute('id');
+  return extendsModel(SecretModel);
+};

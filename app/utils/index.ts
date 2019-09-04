@@ -2,11 +2,10 @@ import { changeRadix } from '@imhele/radix';
 import { MD5, SHA1, SHA256, SHA512, HmacMD5, HmacSHA1, HmacSHA256, HmacSHA512 } from 'crypto-js';
 import { Context } from 'egg';
 import { Schema } from 'joi';
-import { Dictionary } from 'lodash';
-import { getObjectSearchKeys } from 'object-search-key';
-import { WhereOptions } from 'sequelize';
-import yamlJoi, { JoiSchema } from 'yaml-joi';
-import { DefineModelAttr } from './types';
+import { pick, Dictionary } from 'lodash';
+import { DatabaseError, Model } from 'sequelize';
+import yamlJoi from 'yaml-joi';
+import { ArgsType, DefineModel } from './types';
 
 export { changeRadix };
 export { default as ErrCode } from './errorcode';
@@ -84,13 +83,12 @@ export function validate<T>(instance: T, validator: Schema): T {
   return value;
 }
 
-export function extractDefaultValue<T>(attrDefinition: DefineModelAttr<T>): Partial<T> {
-  const ret: Partial<T> = {};
-  // tslint:disable-next-line: forin
-  for (const key in attrDefinition) {
-    ret[key] = attrDefinition[key].defaultValue;
-  }
-  return ret;
+export function validateModel<T>(define: DefineModel<T>, attrs: Partial<T>): T {
+  return validate({ ...define.Sample, ...attrs }, define.Validator);
+}
+
+export function validateAttr<T, U>(define: DefineModel<T>, attrs: U): U {
+  return pick(validateModel(define, attrs), ...Object.keys(attrs)) as U;
 }
 
 /**
@@ -103,18 +101,6 @@ export function delVoid<T>(obj: T): T {
   return obj;
 }
 
-const integerValidator = yamlJoi(`
-type: number
-limitation:
-  - integer: []
-`);
-
-export const validateInt = (...args: any[]): (number | undefined)[] =>
-  args.map(input => {
-    if (!input && typeof input !== 'number') return undefined;
-    return validate(input, integerValidator);
-  });
-
 const paginationValidator = yamlJoi(`
 type: object
 limitation:
@@ -125,9 +111,7 @@ limitation:
         allowEmpty: nothing
         limitation:
           - min: 1
-          - max: 100
           - integer: []
-          - default: 10
       offset:
         type: number
         isSchema: true
@@ -135,37 +119,57 @@ limitation:
         limitation:
           - min: 0
           - integer: []
-          - default: 0
 `);
 
 export function validatePagination(
   ctx: Context,
   obj: Dictionary<any>,
-): { limit: number; offset: number } {
+): { limit?: number; offset?: number } {
   return validate(ctx.app.lodash.pick(obj, 'limit', 'offset'), paginationValidator);
 }
 
-export function generateSearchOr<T>(
-  schema: string | JoiSchema,
-  searchInput: string,
-  includeKeys?: (keyof T)[],
-  excludeKeys?: (keyof T)[],
-) {
-  let search = getObjectSearchKeys(schema, searchInput.split(/(?:\s*)/));
-  if (includeKeys) {
-    const includeSearch = {} as typeof search;
-    (includeKeys as string[]).forEach(key => (includeSearch[key] = search[key]));
-    search = includeSearch;
+export async function retryAsync<
+  T extends (...args: any[]) => any,
+  F = undefined,
+  U = any,
+  R extends (error: any) => void = (error: any) => void
+>(
+  times: number,
+  func: T,
+  args: ArgsType<T>,
+  options: { fallback?: F; onRetryThrow?: R; throwOnAllFailed?: U } = {},
+): Promise<ReturnType<T> | F> {
+  while (times--) {
+    try {
+      return await func(...args);
+    } catch (error) {
+      if (!options.onRetryThrow) continue;
+      options.onRetryThrow(error);
+    }
   }
-  if (excludeKeys) {
-    (excludeKeys as string[]).forEach(key => delete search[key]);
-  }
-  const or = Object.entries(search).reduce(
-    (prev, curr) => {
-      const [key, value] = curr as [keyof T, (string | number)[]];
-      return prev.concat(value.map(searchKey => ({ [key]: `%${searchKey}%` })));
-    },
-    [] as Dictionary<string | number>[],
-  );
-  return or as WhereOptions<T>[];
+  if (options.throwOnAllFailed) throw options.throwOnAllFailed;
+  return options.fallback!;
+}
+
+export function updateEvenIfEmpty(
+  this: Model<any, any>,
+  ...args: ArgsType<(typeof this)['update']>
+): ReturnType<(typeof this)['update']> {
+  return this.update(...args).catch(error => {
+    if (error instanceof DatabaseError) {
+      if (error.message.toLowerCase().includes('query was empty')) {
+        return [0, []];
+      }
+    }
+    throw error;
+  }) as any;
+}
+
+export function extendsModel<T>(model: T): T {
+  (model as any).updateEvenIfEmpty = updateEvenIfEmpty;
+  return model;
+}
+
+export function promisifyTestReq(req: any) {
+  return new Promise((res, rej) => req.end((err: any, ret: any) => (err ? rej(err) : res(ret))));
 }

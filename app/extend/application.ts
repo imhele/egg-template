@@ -1,5 +1,6 @@
 import { Application } from 'egg';
 import lodash from 'lodash';
+import extendEnv, { EnvExtension } from './env';
 import extendHook, { HookExtension } from './hook';
 import extendRedis, { RedisExtension } from './redis';
 
@@ -12,12 +13,13 @@ export interface ExtendApplication<T = any> {
 
 interface ApplicationExtension {
   hook: HookExtension;
+  isEnv: EnvExtension;
   lodash: typeof lodash;
   noop: () => void;
   redis: RedisExtension;
 }
 
-const initQueue: (keyof ApplicationExtension)[] = ['redis'];
+const initQueue: (keyof ApplicationExtension)[] = ['isEnv', 'redis'];
 
 const app: ThisType<Application & { $SYMBOL: any }> & ApplicationExtension = {
   lodash,
@@ -31,9 +33,22 @@ const app: ThisType<Application & { $SYMBOL: any }> & ApplicationExtension = {
     }
     return this[key];
   },
+  get isEnv() {
+    const key = (extendEnv.cacheKey as unknown) as '$SYMBOL';
+    if (!this[key]) {
+      this[key] = extendEnv(this);
+    }
+    return this[key];
+  },
   get redis() {
     const key = (extendRedis.cacheKey as unknown) as '$SYMBOL';
-    if (!this[key]) this[key] = extendRedis(this);
+    if (this[key] === null) return null;
+    if (!this[key]) {
+      this[key] = null;
+      this.hook.onAppReady(async () => {
+        this[key] = await extendRedis(this);
+      });
+    }
     return this[key];
   },
 };
