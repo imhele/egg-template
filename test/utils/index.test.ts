@@ -1,7 +1,7 @@
 import 'mocha';
 import 'tsconfig-paths/register';
 
-import { DefineSecret } from '@/model/secret';
+import { DefineAccount } from '@/model/account';
 import * as utils from '@/utils';
 import assert from 'assert';
 import { app } from 'egg-mock/bootstrap';
@@ -47,15 +47,15 @@ limitation:
 `);
     assert.throws(() => utils.validate({ name: '12345' }, schema));
     assert.strictEqual(utils.validate({ name: 'abc' }, schema).name, 'abc');
-    assert.throws(() => utils.validateAttr(DefineSecret, { accountId: 0 }));
-    const validatedAtttrs = utils.validateAttr(DefineSecret, {
-      accountId: DefineSecret.Sample.accountId,
+    assert.throws(() => utils.validateAttr(DefineAccount, { accountId: 0 }));
+    const validatedAtttrs = utils.validateAttr(DefineAccount, {
+      accountId: DefineAccount.Sample.accountId,
     });
     assert.strictEqual(Object.keys(validatedAtttrs).length, 1);
-    assert.strictEqual(validatedAtttrs.accountId, DefineSecret.Sample.accountId);
+    assert.strictEqual(validatedAtttrs.accountId, DefineAccount.Sample.accountId);
     assert.strictEqual(
-      utils.validateModel(DefineSecret, {}).accountId,
-      DefineSecret.Sample.accountId,
+      utils.validateModel(DefineAccount, {}).accountId,
+      DefineAccount.Sample.accountId,
     );
     assert.deepStrictEqual(
       utils.validatePagination(app.mockContext(), { limit: '10', offset: 0 }),

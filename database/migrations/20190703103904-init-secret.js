@@ -3,7 +3,7 @@
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     const { STRING } = Sequelize;
-    await queryInterface.createTable('Secret', {
+    await queryInterface.createTable('Account', {
       accountId: {
         type: STRING(18),
         allowNull: false,
@@ -13,14 +13,14 @@ module.exports = {
         allowNull: false,
       },
     });
-    await queryInterface.addConstraint('Secret', ['accountId'], {
+    await queryInterface.addConstraint('Account', ['accountId'], {
       type: 'primary key',
       name: 'PrimaryKey',
     });
-    // await queryInterface.addIndex('Secret', { name: 'accountIdIndex', fields: ['accountId'] });
+    // await queryInterface.addIndex('Account', { name: 'accountIdIndex', fields: ['accountId'] });
   },
 
   down: async queryInterface => {
-    await queryInterface.dropTable('Secret');
+    await queryInterface.dropTable('Account');
   },
 };

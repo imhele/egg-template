@@ -1,6 +1,7 @@
 import { Application } from 'egg';
 
 export default async (app: Application) => {
-  const { router } = app;
-  router.get('/');
+  const { controller, router } = app;
+  router.post('/account/create', controller.account.create);
+  router.del('/account/:accountId', controller.account.remove);
 };

@@ -1,16 +1,12 @@
 sudo: false
 language: node_js
-services:
-  - mysql
-  - redis-server
-node_js: '10'
+node_js:
+  - '8, 10, 12'
 before_install:
-  - echo "CREATE DATABASE IF NOT EXISTS appname_test;\nUSE mysql;\nUPDATE user SET user='port', authentication_string=PASSWORD('port') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
+  - npm i npminstall -g
 install:
-  - npm install
-before_script:
-  - npm run test:migrate
-script: npm run cov
+  - npminstall
+script:
+  - npm run ci
 after_script:
-  - npm run coveralls
-  - npm run test:unmigrate
+  - npminstall codecov && codecov

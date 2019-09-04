@@ -20,7 +20,7 @@
     "cov": "cross-env NODE_ENV=test EGG_SERVER_ENV=unittest egg-bin cov",
     "coveralls": "cat ./coverage/lcov.info | coveralls",
     "tsc": "ets && tsc -p tsconfig.json",
-    "lint": "tslint --project . -c tslint.yml",
+    "lint": "tslint --project .",
     "lint-staged": "lint-staged",
     "clean": "ets clean"
   },
@@ -74,7 +74,7 @@
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [
-      "tslint --fix -c tslint.yml",
+      "tslint --fix",
       "prettier --write",
       "git add"
     ]

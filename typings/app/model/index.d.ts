@@ -1,11 +1,11 @@
-// This file is created by egg-ts-helper@1.25.5
+// This file is created by egg-ts-helper@1.25.6
 // Do not modify this file!!!!!!!!!
 
 import 'egg';
-import ExportSecret from '../../../app/model/secret';
+import ExportAccount from '../../../app/model/account';
 
 declare module 'egg' {
   interface IModel {
-    Secret: ReturnType<typeof ExportSecret>;
+    Account: ReturnType<typeof ExportAccount>;
   }
 }

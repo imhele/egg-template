@@ -4,12 +4,12 @@ import { Application } from 'egg';
 import { Instance, STRING } from 'sequelize';
 import yamlJoi from 'yaml-joi';
 
-export interface Secret {
+export interface Account {
   secret: string;
   accountId: string;
 }
 
-export const DefineSecret: DefineModel<Secret> = {
+export const DefineAccount: DefineModel<Account> = {
   Attr: {
     accountId: {
       type: STRING(18),
@@ -45,9 +45,9 @@ limitation:
 };
 
 export default (app: Application) => {
-  const SecretModel = app.model.define<Instance<Secret>, Secret>('Secret', DefineSecret.Attr, {
+  const AccountModel = app.model.define<Instance<Account>, Account>('Account', DefineAccount.Attr, {
     indexes: [{ name: 'PrimaryKey', unique: true, fields: ['accountId'] }],
   });
-  SecretModel.removeAttribute('id');
-  return extendsModel(SecretModel);
+  AccountModel.removeAttribute('id');
+  return extendsModel(AccountModel);
 };
