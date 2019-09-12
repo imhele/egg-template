@@ -327,8 +327,25 @@ declare module 'redis' {
      * KILL - Kill the script currently in execution.
      * LOAD - Load the specified Lua script into the script cache.
      */
-    script: OverloadedCommand<string, any, R>;
-    SCRIPT: OverloadedCommand<string, any, R>;
+    // script: OverloadedCommand<string, any, R>;
+    // SCRIPT: OverloadedCommand<string, any, R>;
+
+    /**
+     * Check existence of scripts in the script cache.
+     */
+    script(run: 'EXISTS', ...scriptsSha1: string[]): Promise<number[]>;
+    SCRIPT(run: 'EXISTS', ...scriptsSha1: string[]): Promise<number[]>;
+    /**
+     * FLUSH - Remove all scripts from the script cache.
+     * KILL - Kill the script currently in execution.
+     */
+    script(run: 'FLUSH' | 'KILL'): Promise<'OK'>;
+    SCRIPT(run: 'FLUSH' | 'KILL'): Promise<'OK'>;
+    /**
+     * Load the specified Lua script into the script cache.
+     */
+    script(run: 'LOAD', script: string): Promise<string>;
+    SCRIPT(run: 'LOAD', script: string): Promise<string>;
 
     /**
      * Subtract multiple sets.
